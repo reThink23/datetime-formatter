@@ -1,0 +1,41 @@
+{
+	"units": {
+		"year": { "gender": "n", "case": { "nominative": { "singular": "year", "plural": "years" }}},
+		"month": { "gender": "n", "case": { "nominative": { "singular": "month", "plural": "months" }}},
+		"week": { "gender": "n", "case": { "nominative": { "singular": "week", "plural": "weeks" }}},
+		"day": { "gender": "n", "case": { "nominative": { "singular": "day", "plural": "days" }}},
+		"hour": { "gender": "n", "case": { "nominative": { "singular": "hour", "plural": "hours" }}},
+		"minute": { "gender": "n", "case": { "nominative": { "singular": "minute", "plural": "minutes" }}},
+		"second": { "gender": "n", "case": { "nominative": { "singular": "second", "plural": "seconds" }}},
+		"millisecond": { "gender": "n", "case": { "nominative": { "singular": "millisecond", "plural": "milliseconds" }}},
+		"weekday": {"gender": "n"}
+	},
+	"past": {
+		"daySpecific": "yesterday",
+		"daySpecific2": "day before yesterday",
+		"single": "last",
+		"prefix": {"value": "ago"},
+		"structure": ["{value} {unit}" , "{value} {unit} {prefix}"]
+	},
+	"present": {
+		"daySpecific": "today",
+		"single": {"n": "this"},
+		"prefix": "",
+		"structure": ["{value} {unit}"]
+	},
+	"future": {
+		"daySpecific": "tomorrow",
+		"daySpecific2": "day after tomorrow",
+		"single": {"n": "next"},
+		"prefix": {"value": "in"},
+		"structure": ["{value} {unit}" , "{prefix} {value} {unit}"]
+	},
+	"general": {
+		"clock": "o'clock",
+		"prefixTime": "at",
+		"hourShort": "h",
+		"minuteShort": "m",
+		"secondShort": "s"
+
+	}
+}

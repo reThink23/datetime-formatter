@@ -1,0 +1,41 @@
+{
+	"units": {
+		"year": { "case": { "nominative": { "singular": "año", "plural": "años" }}, "gender": "m" },
+		"month": { "case": { "nominative": { "singular": "mes", "plural": "meses" }}, "gender": "m" },
+		"week": { "case": { "nominative": { "singular": "semana", "plural": "semanas" }}, "gender": "f" },
+		"day": { "case": { "nominative": { "singular": "día", "plural": "días" }}, "gender": "m" },
+		"hour": { "case": { "nominative": { "singular": "hora", "plural": "horas" }}, "gender": "f" },
+		"minute": { "case": { "nominative": { "singular": "minuto", "plural": "minutos" }}, "gender": "m" },
+		"second": { "case": { "nominative": { "singular": "segundo", "plural": "segundos" }}, "gender": "m" },
+		"millisecond": { "case": { "nominative": { "singular": "milisegundo", "plural": "milisegundos" }}, "gender": "m" },
+		"weekday": { "gender": "m" }
+	},	
+	"past": {
+		"daySpecific": "ayer",
+		"daySpecific2": "antes de ayer",
+		"single": {"f": "pasada", "m": "pasado"},
+		"prefix": {"value": "hace"},
+		"structure": ["{unit} {value}" , "{prefix} {value} {unit}"]
+	},
+	"present": {
+		"daySpecific": "hoy",
+		"single": {"f": "esta", "m": "este"},
+		"prefix": {"value": ""},
+		"structure": ["{value} {unit}"]
+	},
+	"future": {
+		"daySpecific": "mañana",
+		"daySpecific2": "pasado mañana",
+		"single": {"f": "próxima", "m": "próxima"},
+		"prefix": {"value": "en"},
+		"structure": ["{value} {unit}" , "{prefix} {value} {unit}"]
+	},
+	"general": {
+		"clock": "horas",
+		"prefixTime": "a las",
+		"prefixDate": "el",
+		"hourShort": "h",
+		"minuteShort": "'",
+		"secondShort": "\""
+	}
+}

@@ -1,0 +1,67 @@
+{
+	"units": {
+		"year": {
+			"gender": "n",
+			"case": { "nominative": { "singular": "Jahr", "plural": "Jahre" }}
+		},
+		"month": {
+			"gender": "m",
+			"case": { "nominative": { "singular": "Monat", "plural": "Monate" } }
+		},
+		"week": {
+			"gender": "f",
+			"case": { "nominative": { "singular": "Woche", "plural": "Wochen" } }
+		},
+		"day": {
+			"gender": "m",
+			"case": { 
+				"nominative": { "singular": "Tag", "plural": "Tage" },
+				"dative": { "singular": "Tag", "plural": "Tagen" }
+			}
+		},
+		"hour": {
+			"gender": "f",
+			"case": { "nominative": { "singular": "Stunde", "plural": "Stunden" } }
+		},
+		"minute": {
+			"gender": "f",
+			"case": { "nominative": { "singular": "Minute", "plural": "Minuten" } }
+		},
+		"second": {
+			"gender": "f",
+			"case": { "nominative": { "singular": "Sekunde", "plural": "Sekunden" } }
+		},
+		"millisecond": {
+			"gender": "f",
+			"case": { "nominative": { "singular": "Millisekunde", "plural": "Millisekunden" } }
+		},
+		"weekday": { "gender": "m" }
+	},
+	"past": {
+		"daySpecific": "gestern",
+		"daySpecific2": "vorgestern",
+		"single": { "n": "letztes", "f": "letzte", "m": "letzten" },
+		"prefix": {"value": "vor", "requiresCase": "dative"},
+		"structure": ["{value} {unit}", "{prefix} {value} {unit}"]
+	},
+	"present": {
+		"daySpecific": "heute",
+		"single": { "n": "dieses", "f": "diese", "m": "diesen" },
+		"prefix": {"value": ""},
+		"structure": ["{value} {unit}"]
+	},
+	"future": {
+		"daySpecific": "morgen",
+		"daySpecific2": "übermorgen",
+		"single": { "n": "nächstes", "f": "nächste", "m": "nächsten" },
+		"prefix": {"value": "in", "requiresCase": "dative"},
+		"structure": ["{value} {unit}", "{prefix} {value} {unit}"]
+	},
+	"general": {
+		"clock": "Uhr",
+		"prefixTime": "um",
+		"hourShort": "h",
+		"minuteShort": "m",
+		"secondShort": "s"
+	}
+}
