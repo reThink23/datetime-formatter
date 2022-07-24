@@ -1,9 +1,8 @@
 const locales = require('./locale/locales')
+const constants = require('./constants')
 
-const daysPerMonthInYear = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
-const daysPerMonthInLeapYear = {1: 31, 2: 29, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
-const timeEarthRotation = {hour: 23, minute: 56, second: 4, millisecond: 90, microsecond: 530}
-const timeEarthRevolution = {day: 365, hour: 6, minute: 9}
+const daysPerMonthInYear = constants.daysPerMonthInYear // {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+const daysPerMonthInLeapYear = constants.daysPerMonthInLeapYear // {1: 31, 2: 29, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
 
 /**
  * @description formats a given date Object with the given format
@@ -15,14 +14,10 @@ const timeEarthRevolution = {day: 365, hour: 6, minute: 9}
  */
 const format = (dateObj, formatTemplate, locale="en-GB", config=undefined) => {
 	if (!((dateObj instanceof Date && !isNaN(dateObj)) || (typeof dateObj === Object && dateObj.year !== undefined & dateObj.month !== undefined))) throw new TypeError(`dateObj is not a valid date or not an object containing at least the properties month and year (Type of dateObj: ${typeof dateObj}; Value of dateObj: ${dateObj})`) // return false
-	const defaultCfg = { 
-		year: 'Y', month: 'M', day: 'D', hour: 'h', minute: 'm', second: 's', millisecond: 'S', 
-		weekDay: 'd', weekOfYear: 'w', hour12: 'H', dayPeriod: 'A', era: 'E', timeZone: 'Z',
-		textStart: '[', textEnd: ']',
-	}
-	const cfg = config ? Object.assign({}, defaultCfg, config) : defaultCfg
-	optMap = [undefined, 'numeric', '2-digit', 'short', 'long', 'narrow']
-	timeZoneMap = [undefined, 'short', 'shortOffset', 'longOffset', 'long']
+	const defaultCfg = constants.defaultCfg
+	const cfg = config && config != {} ? Object.assign({}, defaultCfg, config) : defaultCfg
+	const optMap = [undefined, 'numeric', '2-digit', 'short', 'long', 'narrow']
+	const timeZoneMap = [undefined, 'short', 'shortOffset', 'longOffset', 'long']
 	const date = objToDate(dateObj) || dateObj
 	const dateAsObj = dateToObj(dateObj) || dateObj
 	const locales = locale
@@ -94,6 +89,10 @@ const between = (min, x, max, includeMin = true, includeMax = false) => {
 	return start < x < end
 }
 
+const dateBetween = (startDate, date, endDate) => {
+	return startDate - date <= 0 && endDate - date >= 0  
+}
+
 /**
  * @description converts a date to an Object containing `year`, `month`, `day`, `hour`, `minute`, `second` and `millisecond`
  * @param {Date} date an instance of date
@@ -141,22 +140,79 @@ const objToDate = (dateObj) => {
  * - difference: the difference in milliseconds
  */
 const getDifference = (date, relativeDate=undefined) => {
+	console.log(new Date());
 	if (!date instanceof Date || isNaN(date)) throw new TypeError(`date is not a valid date (Type of date: ${typeof date}; Value of date: ${date})`) // return false
-	
+
 	const relDate = relativeDate || new Date()
 	const diff = relDate - date
 	const future = diff < 0
+	const millisecond = future ? 999 - Math.abs(relDate.getUTCMilliseconds() - date.getUTCMilliseconds()) : Math.abs(relDate.getUTCMilliseconds() - date.getUTCMilliseconds())
+	const second = future && millisecond ? Math.abs(relDate.getUTCSeconds() - date.getUTCSeconds()) - 1 : Math.abs(relDate.getUTCSeconds() - date.getUTCSeconds())
+	const minute = future && second != 0 ? Math.abs(relDate.getUTCMinutes() - date.getUTCMinutes()) - 1 : Math.abs(relDate.getUTCMinutes() - date.getUTCMinutes())
+	const hour = future && minute != 0 ? Math.abs(relDate.getUTCHours() - date.getUTCHours()) - 1 : Math.abs(relDate.getUTCHours() - date.getUTCHours())
+	const d = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24)) // Math.abs(relDate.getUTCDate() - date.getUTCDate())
+	const week = future ? Math.floor(d / 7) : Math.floor(d / 7)
+	const day = future && hour != 0 ? (d - week * 7) - 1 : (d - week * 7)
+	const month = Math.abs(relDate.getUTCMonth() - date.getUTCMonth())
 	const year = Math.abs(relDate.getUTCFullYear() - date.getUTCFullYear())
-	const month = future && year != 0 ? 12 - Math.abs(relDate.getUTCMonth() - date.getUTCMonth()) : Math.abs(relDate.getUTCMonth() - date.getUTCMonth())
-	const d = Math.abs(relDate.getUTCDate() - date.getUTCDate())
-	const week = future && month != 0 ? 6 - Math.floor(d / 7) : Math.floor(d / 7)
-	const day = future && week != 0 ? 6 - (d - week * 7) : (d - week * 7)
-	const hour = future && day != 0 ? 23 - Math.abs(relDate.getUTCHours() - date.getUTCHours()) : Math.abs(relDate.getUTCHours() - date.getUTCHours())
-	const minute = future && hour != 0 ? 59 - Math.abs(relDate.getUTCMinutes() - date.getUTCMinutes()) : Math.abs(relDate.getUTCMinutes() - date.getUTCMinutes())
-	const second = future && minute != 0 ? 59 - Math.abs(relDate.getUTCSeconds() - date.getUTCSeconds()) : Math.abs(relDate.getUTCSeconds() - date.getUTCSeconds())
-	const millisecond = future && second != 0 ? 999 - Math.abs(relDate.getUTCMilliseconds() - date.getUTCMilliseconds()) : Math.abs(relDate.getUTCMilliseconds() - date.getUTCMilliseconds())
 
-	return {future, inUnits: {year, month, week, day, hour, minute, second, millisecond}, difference: Math.abs(diff)}
+	let remainder = Math.abs(diff)
+	remainder = (remainder % (1000 * 60 * 60 * 24))
+	const resHour = Math.floor(remainder / (1000 * 60 * 60))
+	remainder = (remainder % (resHour * 1000 * 60 * 60))
+	const resMinute = Math.floor(remainder / (1000 * 60))
+	remainder = (remainder % (resMinute * 1000 * 60))
+	const resSecond = Math.floor(remainder / (1000))
+	remainder = (remainder % (resSecond * 1000))
+	const resMillisecond = remainder
+	
+	const daysPerMonth = date.getUTCFullYear() % 4 == 0 ? daysPerMonthInLeapYear : daysPerMonthInYear
+	const relDateMonth = relDate.getUTCMonth(), dateMonth = date.getUTCMonth()
+	const startDay = (future ? relDate.getUTCDate() : date.getUTCDate())
+	const endDay = (future ? date.getUTCDate() : relDate.getUTCDate())
+	const startMonth = (future ? relDateMonth : dateMonth)
+	const endMonth = (future ? dateMonth : relDateMonth)
+	const startYear = (future ? relDate.getUTCFullYear() : date.getUTCFullYear())
+	const endYear = (future ? date.getUTCFullYear() : relDate.getUTCFullYear())
+	let days = d, resMonth = 0, resDay = 0, resYear = 0, resWeek = 0
+
+	for (let i = startYear; i < endYear; i++) {
+		if (days >= 365) {
+			days -= i % 4 == 0 && days >= 366 ? 366 : 365
+			resYear += 1
+		} else { break }
+	}
+
+	if (month == 0) {
+		resMonth = 0
+		resDay = d
+	} else {
+		remainingDays = daysPerMonth[startMonth] - startDay
+		existingDays = daysPerMonth[endMonth] - endDay
+		// resDay = remainingDays + existingDays
+		// for (let i = startYear; i < endYear; i++) {
+		// 	if (days >= 365) {
+		// 		days -= i % 4 == 0 && days >= 366 ? 366 : 365
+		// 		resYear += 1	
+		// 	} else { break }
+		// }
+		if (startDay <= endDay) {
+			resMonth += 1
+			days -= daysPerMonth[startMonth]
+		}
+		for (let i = startMonth+1; i < endMonth; i++) {
+			days -= daysPerMonth[i]
+			resMonth += 1	
+		}
+	}
+	while (days >= 7) {
+		days -= 7
+		resWeek++
+	}
+	resDay = days
+	// resYear = Math.floor(resMonth / 12)
+	// resMonth = (resMonth - resYear * 12)
+	return {future, inUnits: {year: resYear, month: resMonth, week: resWeek, day: resDay, hour: resHour, minute: resMinute, second: resSecond, millisecond: resSecond}, difference: Math.abs(diff)}
 }
 
 /**
@@ -182,16 +238,18 @@ const getInUnit = (milliseconds, unit=undefined, lastZero=false) => {
 	const values = [year, month, week, day, hour, minute, second, millisecond]
 	if (unit !== undefined) {
 		const idx = dateTime.indexOf(unit)
-		if (idx > -1) return [unit, values[idx]]
+		const value = values[idx]
+		if (idx > -1) return {unit, value}
 	} 
 	for (let i = 0; i < values.length; i++) {
-		if (values[i] > 0) return lastZero ? [dateTime[i-1], values[i-1]] : [dateTime[i], values[i]]
+		if (values[i] > 0) return lastZero ? {unit: dateTime[i-1], value: values[i-1]} : {unit: dateTime[i], value: values[i]}
 	}
-	return [0, "millisecond"]
+	return {value: 0, unit: "millisecond"}
 }
 /**
- * It takes a `unit`, value, reference and language code as arguments and returns a string.
- * @param {"year"|"month"|"week"|"day"|"hour"|"minute"|"second"|"millisecond"} unit - the `unit` to format
+ * It takes a unit, value, reference and language code as arguments and returns a string.
+ * Format given value with the certain value
+ * @param {"year"|"month"|"week"|"day"|"hour"|"minute"|"second"|"millisecond"} unit - the unit to format
  * @param {number} value - value of a `unit` if 0 `ref` defaults to `present`, if 1 instead of the value a keyword will be used in the formatting string, otherwise display value as digit.
  * @param {"past"|"present"|"future"} [ref=future] - a reference if the value is in the `future` or in the `past`. If `value` is 0, this defaults to `present` 
  * @param {"en"|"de"|"es"} [langCode=en] - The language code to display the result in.
@@ -223,8 +281,7 @@ const getResult = (unit, value, ref="future", langCode="en") => {
 }
 
 /**
- * takes a date, a relative date, a unit, and a language code, and returns a
- * string representing the difference between the the date and the relative date
+ * Formats a string of a value and an unit representing the difference between a given date and the relative date
  * @param {Date} date - The date to format.
  * @param {undefined|Date} [relDate=undefined] - The date to compare to. If not provided, the current date is used.
  * @param {undefined|"year"|"month"|"week"|"day"|"hour"|"minute"|"second"|"millisecond"} [unit=undefined] - unit to represent, defaults to `undefined`. If `undefined` returns the largest unit which is not zero.
@@ -236,25 +293,39 @@ const formatRelative = (date, relDate=undefined, unit=undefined, langCode=undefi
 	const rel = relDate || new Date()
 	const diff = date - rel
 	const best = getInUnit(Math.abs(diff), unit ? unit : undefined)
-	const res = getResult(best[0], best[1], diff < 0 ? "past" : "future", locale)
+	const res = getResult(best.unit, best.value, diff < 0 ? "past" : "future", locale)
 	return res
 }
 
-const formatDifference = (date, relDate, langCode="en") => {
+/**
+ * Formats a string representing the difference between two given dates
+ * @param {object} params
+ * @param {Date} params.date a Date to get the difference to `relDate`
+ * @param {Date|undefined} [params.relDate=undefined] a Date to get the difference from `date`. If undefined defaults to a `new Date()` 
+ * @param {"en"|"de"|"es"} [params.langCode=en] a 2-letter Alpha code representing a supported language
+ * @param {string} [params.structure="{year}, {month}, {week}, {day}, {hour}, {minute}, {second}"] a string representing the formatting of the output. Available are `{year}`, `{month}`, `{week}`, `{day}`, `{hour}`, `{minute}`, `{second}`
+ * @param {boolean} [params.usePrefix=true] if true uses a prefix like `ago` in `2 weeks, 6 days, 5 hours ago` otherwise will be omitted
+ * @returns {string} A formatted string with the difference between the two dates.
+ */
+const formatDifference = ({date, relDate, langCode = "en", structure = "{year}, {month}, {week}, {day}, {hour}, {minute}, {second}", usePrefix=true}={}) => {
 	const locale = getDefaultLocale(langCode)
 	const lang = locales[locale]
-	let structure = "{prefix} {year}, {month}, {week}, {day}, {hour}, {minute}, {second}"
+	const dateTime = ["year", "month", "week", "day", "hour", "minute", "second", "millisecond"]
 	const diff = getDifference(date, relDate)
-	const prefix = diff.future ? lang.future.prefix.value : lang.past.prefix.value
+	const ref = (diff.future? "future" : "past")
 	for (const key in diff.inUnits) {
 		const value = diff.inUnits[key];
-		const cs = lang[(diff.future? "future" : "past")].prefix.requiresCase || "nominative"
-		const numerus = lang.units[key].case[cs]
+		const cs = lang[ref].prefix.requiresCase || "nominative"
+		const numerus = lang.units[key].case[cs] || lang.units[key].case["nominative"]
 		const label = value == 1 ? numerus.singular : numerus.plural
-		structure = structure.replace(new RegExp(` \\{${key}\\}(,|$)`), value != 0 && label != undefined ? ` ${value} ${label}$1` : '')
+		structure = structure.replace(new RegExp(` {0,1}\\{${key}\\}(,|$)`), value != 0 && label != undefined ? ` ${value} ${label}$1` : '')
 	}
-	structure = structure.replace("{prefix}", prefix)
-	return structure
+	if (usePrefix) {
+		const prefixVal = lang[ref].prefix.value
+		const str = lang[ref].structure[1].replace("{prefix}", prefixVal)
+		structure = str.replace("{value} {unit}", structure)
+	}
+	return structure.trim()
 }
 
 /**
@@ -272,6 +343,47 @@ const getWeekNumber = (date) => {
 	return weekNo;
 }
 
+const getNextWeekDay = (date, weekDay) => {
+	const weekDays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+	const weekDayNo = typeof weekDay === 'number' ? weekDay % 7 : weekDays.indexOf(weekDay)
+	if (weekDayNo === -1) return false
+	date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	date.setUTCDate(date.getUTCDate() + Math.abs(weekDayNo - (date.getUTCDay() || 7)));
+	return date
+}
+
+const getLastWeekDay = (date, weekDay) => {
+	const weekDays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+	const weekDayNo = typeof weekDay === 'number' ? weekDay % 7 : weekDays.indexOf(weekDay)
+	if (weekDayNo === -1) return false
+	date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	date.setUTCDate(date.getUTCDate() - Math.abs(weekDayNo - (date.getUTCDay() || 7)));
+	return date
+}
+
+const getWeekDayInMonth = (date, weekDay, position) => {
+	const positions = ["first", "second", "third", "last"]
+	const pos = typeof position === 'number' ? position % 4 : positions.indexOf(position)
+	const daysPerMonth = constants.daysPerMonthInYear[(res.month + 1)]
+	if (pos != 3) {
+		const weekDayMonthStart = new Date(date.getUTCFullYear(), date.getUTCMonth(), 1).getUTCDay()
+		const firstWeekDay = weekDay - weekDayMonthStart
+		const first = 1 + (firstWeekDay < 0 ? 7 + firstWeekDay : firstWeekDay)
+		for (let i = first, x = 0; i <= daysPerMonth; i += 7) {
+			if (pos === x) res.day = i
+			x++
+		}
+	} else {
+		const weekDayMonthEnd = new Date(ate.getUTCFullYear(), date.getUTCMonth(), daysPerMonth).getUTCDay()
+		const lastWeekDay = weekDay - weekDayMonthEnd
+		const last = daysPerMonth + (lastWeekDay > 0 ? 7 - lastWeekDay : lastWeekDay)
+		day = last
+	}
+	date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	date.setUTCDate(day);
+	return date
+}
+
 /**
  * If the locale code is not defined, get the default locale code from the browser/system. If the locale code
  * is defined, use it. If the locale code is not defined and the browser locale code is not supported,
@@ -282,6 +394,48 @@ const getWeekNumber = (date) => {
 const getDefaultLocale = (localeCode=undefined) => {
 	const langCode = (localeCode || Intl.DateTimeFormat().resolvedOptions().locale).split("-")[0]
 	return Object.keys(locales).includes(langCode) ? langCode : "en"
+}
+
+const parseDST = (string, year) => {
+	const res = {}
+	res.year = year ?? new Date().getUTCFullYear()
+	const position = ["first", "second", "third", "last"]
+	const weekDays = constants.weekDays // ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+	const monthNames = constants.monthNames // ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+	const prefixTime = " at "
+	const [date, time] = string.split(prefixTime)
+	const dateParts = date.split(' ')
+	for (let i = 0; i < dateParts.length; i++) {
+		const part = dateParts[i]
+		if (position.includes(part.toLowerCase())) res.pos = position.indexOf(part.toLowerCase())
+		if (weekDays.includes(part)) res.weekDay = weekDays.indexOf(part)
+		if (monthNames.includes(part)) res.month = monthNames.indexOf(part)
+		if (part === "before") res.secondWeekDay = weekDays.indexOf(dateParts[i-1])
+	}
+	const daysPerMonth = constants.daysPerMonthInYear[(res.month + 1)]
+	
+	if (res.pos != 3) {
+		const weekDayMonthStart = new Date(res.year, res.month, 1).getUTCDay()
+		const firstWeekDay = res.weekDay - weekDayMonthStart
+		const first = 1 + (firstWeekDay < 0 ? 7 + firstWeekDay : firstWeekDay)
+		for (let i = first, x=0; i <= daysPerMonth; i+=7) {
+			if (res.pos === x) res.day = i
+			x++
+		}
+	} else  {
+		const weekDayMonthEnd = new Date(res.year, res.month, daysPerMonth).getUTCDay()
+		const lastWeekDay = res.weekDay - weekDayMonthEnd
+		const last = daysPerMonth + (lastWeekDay > 0 ? 7 - lastWeekDay : lastWeekDay)
+		res.day = last
+		// for (let i = last, x=0; i >= 1; i-=7) {
+		// 	if (res.pos === x) res.day = i
+		// 	x++
+		// }
+	}
+	const t = time.split(' ')
+	const [hour, minute] = t[0].split(':')
+	const timezoneOffset = t[1] && t[1].includes('UTC') ? t[1].split('UTC')[1] || 0 : 0
+	return {year: res.year, month: res.month, day: res.day, hour: parseInt(hour), minute: parseInt(minute)}
 }
 
 // function validateStructure(obj, required={}, hasOnlyRequired=false, onlyOwnProperties=true, validateTypes=false) {
@@ -301,4 +455,4 @@ const getDefaultLocale = (localeCode=undefined) => {
 // 	return true
 // }
 
-module.exports = {format, formatRelative, formatDifference, addLeadingZeros, getWeekNumber, objToDate, dateToObj, getDifference, getInUnit, getResult}
+module.exports = {format, formatRelative, formatDifference, addLeadingZeros, getWeekNumber, objToDate, dateToObj, getDifference, getInUnit, getResult, parseDST}
