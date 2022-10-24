@@ -1,0 +1,20 @@
+Date {
+	leadingZero = "0" "1".."9"
+	sep = "." | "/" | "-"
+	day = num | "1" num | "2" num | "30" | "31"
+	dayL0 = leadingZero | "1" num | "2" num | "30" | "31"
+	month = "1".."12"
+	monthL0 = leadingZero | "10" | "11" | "12"
+	year = 4*num | 2*num
+	dateNoZero = day sep month sep year | month sep day sep year | year sep month sep day
+	dateZero = dayL0 sep monthL0 sep year | monthL0 sep dayL0 sep year | year sep monthL0 sep dayL0
+	mNameEn = "January" | "February" | "March" | "April" | "May" | "June" | "July" | "August" | "September" | "October" | "November" | "December"
+	mNameDe = "Januar" | "Februar" | "März" | "April" | "Mai" | "Juni" | "Juli" | "August" | "September" | "Oktober" | "November" | "Dezember"
+	first = "st"
+	second = "nd"
+	third = "rd"
+	nth = "th"
+	nonSpecialNum = "4".."9" 
+	pos = 1 first | 2 second | 3 third | nonSpecialNum nth
+	dateMonth = pos " " mNameEn " " year | day ". " mNameDe year
+}

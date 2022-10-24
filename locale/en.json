@@ -33,9 +33,12 @@
 	"general": {
 		"clock": "o'clock",
 		"prefixTime": "at",
+		"prefixDate": "on",
 		"hourShort": "h",
 		"minuteShort": "m",
-		"secondShort": "s"
+		"secondShort": "s",
+		"weekDays": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "Oktober", "November", "December"],
+		"seasons": ["winter", "spring", "summer", "autumn"]
 
 	}
 }

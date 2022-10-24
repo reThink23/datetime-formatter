@@ -60,8 +60,17 @@
 	"general": {
 		"clock": "Uhr",
 		"prefixTime": "um",
+		"prefixDate": "am",
 		"hourShort": "h",
 		"minuteShort": "m",
-		"secondShort": "s"
+		"secondShort": "s",
+		"weekDays": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+		"seasons": ["Winter", "Frühling", "Sommer", "Herbst"],
+		"positions": [
+			{"n": "erstes", "f": "erste","m": "erste"}, 
+			{"n": "zweites", "f": "zweite","m": "zweite"}, 
+			{"n": "drittes", "f": "dritte","m": "dritte"}, 
+			{"n": "letztes", "f": "letzte","m": "letzte"}
+		]
 	}
 }

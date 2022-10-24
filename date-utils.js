@@ -1,5 +1,6 @@
 const locales = require('./locale/locales')
 const constants = require('./constants')
+const {getDefaultLocale, addLeadingZeros, splitAt} = require('./utils')
 
 const daysPerMonthInYear = constants.daysPerMonthInYear // {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
 const daysPerMonthInLeapYear = constants.daysPerMonthInLeapYear // {1: 31, 2: 29, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
@@ -13,7 +14,7 @@ const daysPerMonthInLeapYear = constants.daysPerMonthInLeapYear // {1: 31, 2: 29
  * @return {string | false} formatted dateTime as string or `false` if `dateObj` is neither a valid `date` nor `dateObj` (at least containing properties `year` and `month`)
  */
 const format = (dateObj, formatTemplate, locale="en-GB", config=undefined) => {
-	if (!((dateObj instanceof Date && !isNaN(dateObj)) || (typeof dateObj === Object && dateObj.year !== undefined & dateObj.month !== undefined))) throw new TypeError(`dateObj is not a valid date or not an object containing at least the properties month and year (Type of dateObj: ${typeof dateObj}; Value of dateObj: ${dateObj})`) // return false
+	if (!( (dateObj instanceof Date && !isNaN(dateObj)) || (typeof dateObj === Object && dateObj.year !== undefined & dateObj.month !== undefined))) throw new TypeError(`dateObj is not a valid date or not an object containing at least the properties month and year (Type of dateObj: ${typeof dateObj}; Value of dateObj: ${dateObj})`) // return false
 	const defaultCfg = constants.defaultCfg
 	const cfg = config && config != {} ? Object.assign({}, defaultCfg, config) : defaultCfg
 	const optMap = [undefined, 'numeric', '2-digit', 'short', 'long', 'narrow']
@@ -23,7 +24,6 @@ const format = (dateObj, formatTemplate, locale="en-GB", config=undefined) => {
 	const locales = locale
 	const templateArr = formatTemplate.match(new RegExp(`(?:\\${cfg.textStart}[\\w ]+\\${cfg.textEnd}|(.)\\1*)`, 'g'))
 	// const locales = [...locale].split(/(, |,)/g)
-
 
 	// iterate over template, check for a match with config, and replace it in the right format 
 	for (let i = 0; i < templateArr.length; i++) {
@@ -62,36 +62,9 @@ const format = (dateObj, formatTemplate, locale="en-GB", config=undefined) => {
 	return templateArr.join('')
 }
 
-/**
- * @description add leading zeros to given number
- * @param {number | string} num number to add leading zeros to
- * @param {number} length how many characters long should the resulting string be?
- * @return {string | false} the resulting string with added zeros if necessary, if `num.toString().length > length` return num as string
- */
-const addLeadingZeros = (num, length=2) => {
-	const numStr = num.toString()
-	if (numStr.length > length) return ''
-	return (numStr.length < length ? '0'.repeat(length - numStr.length) + numStr : numStr)
-}
+const isLeapYear = (year) => year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)
 
-/**
- * Check if number is within a range.
- * @param {number} min - The minimum value of the range
- * @param {number} x - number to check
- * @param {number} max - the maximum value of the range
- * @param {boolean} [includeMin=true] - if true `min` is inclusive
- * @param {boolean} [includeMax=false] - if true `max` is inclusive
- * @returns {boolean} if number is in range or not.
- */
-const between = (min, x, max, includeMin = true, includeMax = false) => {
-	const start = includeMin? min-1 : min
-	const end = includeMax? max + 1 : max 
-	return start < x < end
-}
-
-const dateBetween = (startDate, date, endDate) => {
-	return startDate - date <= 0 && endDate - date >= 0  
-}
+const dateBetween = (startDate, date, endDate) => startDate - date <= 0 && endDate - date >= 0
 
 /**
  * @description converts a date to an Object containing `year`, `month`, `day`, `hour`, `minute`, `second` and `millisecond`
@@ -166,8 +139,9 @@ const getDifference = (date, relativeDate=undefined) => {
 	remainder = (remainder % (resSecond * 1000))
 	const resMillisecond = remainder
 	
-	const daysPerMonth = date.getUTCFullYear() % 4 == 0 ? daysPerMonthInLeapYear : daysPerMonthInYear
-	const relDateMonth = relDate.getUTCMonth(), dateMonth = date.getUTCMonth()
+	const daysPerMonth = isLeapYear(date.getUTCFullYear()) ? daysPerMonthInLeapYear : daysPerMonthInYear
+	const relDateMonth = relDate.getUTCMonth()
+	const dateMonth = date.getUTCMonth()
 	const startDay = (future ? relDate.getUTCDate() : date.getUTCDate())
 	const endDay = (future ? date.getUTCDate() : relDate.getUTCDate())
 	const startMonth = (future ? relDateMonth : dateMonth)
@@ -178,7 +152,7 @@ const getDifference = (date, relativeDate=undefined) => {
 
 	for (let i = startYear; i < endYear; i++) {
 		if (days >= 365) {
-			days -= i % 4 == 0 && days >= 366 ? 366 : 365
+			days -= isLeapYear(i) && days >= 366 ? 366 : 365
 			resYear += 1
 		} else { break }
 	}
@@ -192,7 +166,7 @@ const getDifference = (date, relativeDate=undefined) => {
 		// resDay = remainingDays + existingDays
 		// for (let i = startYear; i < endYear; i++) {
 		// 	if (days >= 365) {
-		// 		days -= i % 4 == 0 && days >= 366 ? 366 : 365
+		// 		days -= isLeapYear(i) && days >= 366 ? 366 : 365
 		// 		resYear += 1	
 		// 	} else { break }
 		// }
@@ -357,7 +331,7 @@ const getLastWeekDay = (date, weekDay) => {
 	const weekDayNo = typeof weekDay === 'number' ? weekDay % 7 : weekDays.indexOf(weekDay)
 	if (weekDayNo === -1) return false
 	date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-	date.setUTCDate(date.getUTCDate() - Math.abs(weekDayNo - (date.getUTCDay() || 7)));
+	date.setUTCDate(1 + date.getUTCDate() - Math.abs(weekDayNo - (date.getUTCDay() || 7)));
 	return date
 }
 
@@ -384,16 +358,12 @@ const getWeekDayInMonth = (date, weekDay, position) => {
 	return date
 }
 
-/**
- * If the locale code is not defined, get the default locale code from the browser/system. If the locale code
- * is defined, use it. If the locale code is not defined and the browser locale code is not supported,
- * use English
- * @param {string} [localeCode] - The locale code to use. If not provided, the default locale will be used.
- * @returns {string} The locale code
- */
-const getDefaultLocale = (localeCode=undefined) => {
-	const langCode = (localeCode || Intl.DateTimeFormat().resolvedOptions().locale).split("-")[0]
-	return Object.keys(locales).includes(langCode) ? langCode : "en"
+const getTimezoneOffset = (string) => {
+	const offsetData = string.split("UTC")[1]
+	let offsetTime = offsetData.includes(":") ? offsetData.split(":") : splitAt(offsetData, 3)
+	const hour = parseInt(offsetTime[0])
+	const minute = parseFloat(parseInt(offsetTime[1]) / 60)
+	return hour + (hour < 0 ? -1 : 1) * minute
 }
 
 const parseDST = (string, year) => {
@@ -434,25 +404,9 @@ const parseDST = (string, year) => {
 	}
 	const t = time.split(' ')
 	const [hour, minute] = t[0].split(':')
-	const timezoneOffset = t[1] && t[1].includes('UTC') ? t[1].split('UTC')[1] || 0 : 0
-	return {year: res.year, month: res.month, day: res.day, hour: parseInt(hour), minute: parseInt(minute)}
+	const timezoneOffset = t[1] && t[1].includes('UTC') ? getTimezoneOffset(t[1]) || 0 : undefined
+	if (res.secondWeekDay) res.day = getLastWeekDay(new Date(res.year, res.month, res.day), res.secondWeekDay).getUTCDate()
+	return {year: res.year, month: res.month + 1, day: res.day, hour: parseInt(hour), minute: parseInt(minute), UTCOffset: timezoneOffset}
 }
 
-// function validateStructure(obj, required={}, hasOnlyRequired=false, onlyOwnProperties=true, validateTypes=false) {
-// 	if(!onlyOwnProperties && obj.length !== required.length) return false
-// 	for (const key in required) {
-// 		if (onlyOwnProperties) {
-// 			if (Object.hasOwnProperty.call(obj, key)) {
-// 				if (!obj.has(key)) return false
-// 				if(hasOnlyRequired && !required.has(key)) return false	
-// 				if (validateTypes && typeof obj[key] !== required[key]) return false
-// 			}
-// 		} else {
-// 			if (key != el) return false
-// 			if(hasOnlyRequired && !required.includes(key)) return false
-// 		}
-// 	}
-// 	return true
-// }
-
-module.exports = {format, formatRelative, formatDifference, addLeadingZeros, getWeekNumber, objToDate, dateToObj, getDifference, getInUnit, getResult, parseDST}
+module.exports = {format, formatRelative, formatDifference, addLeadingZeros, getWeekNumber, objToDate, dateToObj, getDifference, getInUnit, getResult, parseDST, dateBetween}
